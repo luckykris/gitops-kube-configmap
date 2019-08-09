@@ -1,0 +1,10 @@
+apiVersion: networking.istio.io/v1alpha3
+kind: DestinationRule
+metadata:
+  name: opscd
+  namespace: prod
+spec:
+  host: opscd
+  trafficPolicy:
+    loadBalancer:
+      simple: RANDOM

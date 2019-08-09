@@ -1,0 +1,35 @@
+variables:
+  GITOPS_KUBE_BN: 10.115.5.158/ops
+  REGISTRY_USER: admin
+  REGISTRY_PASSWORD: admin
+stages:
+  - build
+  - upload
+  - deploy
+
+job build_image:
+  stage: build
+  script: python gitops-kube-ci.py -m build -c $CI_COMMIT_SHA -n $CI_PROJECT_NAME -b $GITOPS_KUBE_BN -u $REGISTRY_USER -p $REGISTRY_PASSWORD
+  only:
+    - master
+    - prod
+
+job push_image:
+  stage: upload
+  script: python gitops-kube-ci.py -m push -c $CI_COMMIT_SHA -n $CI_PROJECT_NAME -b $GITOPS_KUBE_BN -u $REGISTRY_USER -p $REGISTRY_PASSWORD
+  only:
+    - master
+    - prod
+
+job deploy_test:
+  stage: deploy
+  script: python gitops-kube-cd.py -m push -c $CI_COMMIT_SHA -n $CI_PROJECT_NAME -b $GITOPS_KUBE_BN -B test
+  only:
+    - master
+
+
+job deploy_prod:
+  stage: deploy
+  script: python gitops-kube-cd.py -m push -c $CI_COMMIT_SHA -n $CI_PROJECT_NAME -b $GITOPS_KUBE_BN -B prod
+  only:
+    - prod

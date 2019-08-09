@@ -1,0 +1,51 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  annotations:
+    configmap.reloader.stakater.com/reload: "{{APP_NAME}}-config"
+  name: {{APP_NAME}}-{{APP_VERSION}}
+  namespace: {{BRANCH_NAME}}
+  labels:
+    app: {{APP_NAME}}
+    version: "{{APP_NAME}}"
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: {{APP_NAME}}
+      version: "{{APP_VERSION}}"
+  template:
+    metadata:
+      labels:
+        app: {{APP_NAME}}
+        version: "{{APP_VERSION}}"
+    spec:
+      containers:
+        - name: {{APP_NAME}}
+          image: {{IMAGE_PATH}}
+          imagePullPolicy: IfNotPresent
+          resources:
+            limits:
+              memory: "256Mi"
+              cpu: "300m"
+          readinessProbe:
+            tcpSocket:
+              port: 8001
+            initialDelaySeconds: 60
+            periodSeconds: 30
+          livenessProbe:
+            httpGet:
+              path: /v1
+              port: 8001
+            initialDelaySeconds: 60
+            periodSeconds: 60
+          ports:
+            - containerPort: 8001
+          volumeMounts:
+          - name: settings
+            mountPath: /app/opscd/config 
+
+      volumes:
+        - name: settings
+          configMap:
+            name: {{APP_NAME}}-config
